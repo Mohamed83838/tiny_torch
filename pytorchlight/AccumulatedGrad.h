@@ -4,9 +4,9 @@
 
 class AccumulatedGrad : public Node {
 public:
-    Tensor& tensor; 
+    Tensor* tensor; 
 
-    AccumulatedGrad(Tensor& t);
+    AccumulatedGrad(Tensor* t, std::vector<size_t> size_of_tensor_);
 
-    void backward( std::vector<Tensor>& grads) ;
+    std::vector<Tensor> backward( std::vector<Tensor>& grads) override;
 };

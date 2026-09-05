@@ -1,6 +1,6 @@
 #include "AddNode.h"
 
-std::vector<Tensor> AddNode::backward(const std::vector<Tensor>& grads)  
+std::vector<Tensor> AddNode::backward( std::vector<Tensor>& grads)  
 {
 
 	Tensor dl_x = grads[0];
@@ -8,6 +8,7 @@ std::vector<Tensor> AddNode::backward(const std::vector<Tensor>& grads)
 	return { dl_x,dl_y };
 }
 
-AddNode::AddNode() :
-	Node() {
+AddNode::AddNode(std::vector<size_t> size_of_tensor_) :
+	Node(size_of_tensor_) {
+	node_type = "AddNode";
 };

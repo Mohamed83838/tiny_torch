@@ -109,7 +109,9 @@ std::shared_ptr <Edge> Tensor::get_or_create_leaf_node(int input_nr_) {
 	if (!auto_grad) return nullptr;
 	if (grad_fn != nullptr) return std::make_shared<Edge>(input_nr_, grad_fn);
 
-	grad_fn = std::make_shared<AccumulatedGrad>(*this);
+	//grad_fn = std::make_shared<AccumulatedGrad>(*this);
+	AccumulatedGrad* p = new AccumulatedGrad(this,this->sizes());
+	grad_fn = std::shared_ptr<Node>(p);
 	return std::make_shared<Edge>(input_nr_,grad_fn);
 }
 //clone a tensor

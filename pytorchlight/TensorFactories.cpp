@@ -9,8 +9,16 @@
 #include "AddNode.h"
 #include "MultNode.h"
 #include "mmNode.h"
+#include <iostream>
 
 namespace tiny_torch {
+
+    //test namespace
+
+    void test_namespace() {
+        std::cout << "Namespace tiny_torch is working!" << std::endl;
+	}
+
     // Passed by const reference to avoid copying
     static std::size_t calculate_numel(const std::vector<std::size_t>& sizes) {
         std::size_t dim = sizes.size();
@@ -93,14 +101,14 @@ namespace tiny_torch {
         std::shared_ptr<TensorImpl> impl = std::make_shared<TensorImpl>(std::move(storage), sizes);
         return Tensor(std::move(impl));
     }
-
-    Tensor add(Tensor& x, Tensor& y)
+	// Addition of two tensors with the same size
+    Tensor add(Tensor* x, Tensor* y)
 
     {
 
         //get sizes
-        const std::vector<std::size_t>& sizes_x = x.sizes();
-        const std::vector<std::size_t>& sizes_y = y.sizes();
+        const std::vector<std::size_t>& sizes_x = x->sizes();
+        const std::vector<std::size_t>& sizes_y = y->sizes();
         if (sizes_x != sizes_y)
         {
 
@@ -109,19 +117,19 @@ namespace tiny_torch {
         //create the output tensor
         Tensor res = zeros(sizes_x);
         //get the data and convert it:
-        double* data_x = x.data_ptr();
-        double* data_y = y.data_ptr();
+        double* data_x = x->data_ptr();
+        double* data_y = y->data_ptr();
         double* data_res = res.data_ptr();
         //initiate number of element and number of dimention
-        size_t numel = x.numel();
-        size_t numd = x.sizes().size();
-        //initiate teh indices :
+        size_t numel = x->numel();
+        size_t numd = x->sizes().size();
+        //initiate the indices :
         std::vector<size_t> indices(numd, 0);
         //the actual loop 
         for (size_t i = 0; i < numel; i++)
         {
-            size_t pos_x = x.get_flatten_indice(indices);
-            size_t pos_y = y.get_flatten_indice(indices);
+            size_t pos_x = x->get_flatten_indice(indices);
+            size_t pos_y = y->get_flatten_indice(indices);
             size_t pos_out = res.get_flatten_indice(indices);
 
             data_res[pos_out] = data_x[pos_x] + data_y[pos_y];
@@ -139,12 +147,12 @@ namespace tiny_torch {
         }
 
         //auto grad
-        if (x.auto_grad || y.auto_grad) {
+        if (x->auto_grad || y->auto_grad) {
             res.auto_grad = true;
-            std::shared_ptr<AddNode> node = std::make_shared<AddNode>();
+            std::shared_ptr<AddNode> node = std::make_shared<AddNode>(res.sizes());
 
-            if (x.auto_grad) node->add_next_edge(x.get_or_create_leaf_node(0));
-            if (y.auto_grad) node->add_next_edge(y.get_or_create_leaf_node(1));
+            if (x->auto_grad) node->add_next_edge(x->get_or_create_leaf_node(0));
+            if (y->auto_grad) node->add_next_edge(y->get_or_create_leaf_node(1));
 
             res.grad_fn = node;
         }
@@ -152,13 +160,13 @@ namespace tiny_torch {
 
     }
 
-    Tensor multiply(Tensor& x, Tensor& y)
+    Tensor multiply(Tensor* x, Tensor* y)
 
     {
 
         //get sizes
-        const std::vector<std::size_t>& sizes_x = x.sizes();
-        const std::vector<std::size_t>& sizes_y = y.sizes();
+        const std::vector<std::size_t>& sizes_x = x->sizes();
+        const std::vector<std::size_t>& sizes_y = y->sizes();
         if (sizes_x != sizes_y)
         {
 
@@ -167,19 +175,19 @@ namespace tiny_torch {
         //create the output tensor
         Tensor res = zeros(sizes_x);
         //get the data and convert it:
-        double* data_x = x.data_ptr();
-        double* data_y = y.data_ptr();
+        double* data_x = x->data_ptr();
+        double* data_y = y->data_ptr();
         double* data_res = res.data_ptr();
         //initiate number of element and number of dimention
-        size_t numel = x.numel();
-        size_t numd = x.sizes().size();
+        size_t numel = x->numel();
+        size_t numd = x->sizes().size();
         //initiate teh indices :
         std::vector<size_t> indices(numd, 0);
         //the actual loop 
         for (size_t i = 0; i < numel; i++)
         {
-            size_t pos_x = x.get_flatten_indice(indices);
-            size_t pos_y = y.get_flatten_indice(indices);
+            size_t pos_x = x->get_flatten_indice(indices);
+            size_t pos_y = y->get_flatten_indice(indices);
 
             data_res[i] = data_x[i] * data_y[i];
 
@@ -198,12 +206,12 @@ namespace tiny_torch {
 
 // Check if autograd is needed
      //auto grad
-        if (x.auto_grad || y.auto_grad) {
+        if (x->auto_grad || y->auto_grad) {
             res.auto_grad = true;
-            std::shared_ptr<MultNode> node = std::make_shared<MultNode>(x,y);
+            std::shared_ptr<MultNode> node = std::make_shared<MultNode>(x,y, res.sizes());
 
-            if (x.auto_grad) node->add_next_edge(x.get_or_create_leaf_node(0));
-            if (y.auto_grad) node->add_next_edge(y.get_or_create_leaf_node(1));
+            if (x->auto_grad) node->add_next_edge(x->get_or_create_leaf_node(0));
+            if (y->auto_grad) node->add_next_edge(y->get_or_create_leaf_node(1));
 
             res.grad_fn = node;
         }
@@ -213,10 +221,10 @@ namespace tiny_torch {
     }
 // produit scalaire entre deux matrices de dimention 2 :
 
-Tensor mm( Tensor& x, Tensor& y)
+Tensor mm( Tensor* x, Tensor* y)
   {
-    const std::vector<std::size_t>& sizes_x = x.sizes();
-    const std::vector<std::size_t>& sizes_y = y.sizes();
+    const std::vector<std::size_t>& sizes_x = x->sizes();
+    const std::vector<std::size_t>& sizes_y = y->sizes();
     //check that the number of dimention is 2
     if (sizes_x.size() != 2 || sizes_y.size()!= 2)
     {
@@ -233,8 +241,8 @@ Tensor mm( Tensor& x, Tensor& y)
     const std::vector<std::size_t> sizes_out = { sizes_x[0],sizes_y[1] };
     Tensor res = zeros(sizes_out);
     //get the data and convert it:
-     double* data_x = x.data_ptr();
-     double* data_y = y.data_ptr();
+     double* data_x = x->data_ptr();
+     double* data_y = y->data_ptr();
     double* data_res = res.data_ptr();
     // initialize number of rows and cols
     std::size_t rows = sizes_out[0];
@@ -252,8 +260,8 @@ Tensor mm( Tensor& x, Tensor& y)
                  std::vector<std::size_t> indices_x = { i,s };
                  std::vector<std::size_t> indices_y = {s,j };
                  
-                size_t pos_x = x.get_flatten_indice(indices_x);
-                size_t pos_y = y.get_flatten_indice(indices_y);
+                size_t pos_x = x->get_flatten_indice(indices_x);
+                size_t pos_y = y->get_flatten_indice(indices_y);
                 result += data_x[pos_x] * data_y[pos_y];
            
                 
@@ -265,25 +273,29 @@ Tensor mm( Tensor& x, Tensor& y)
     }
     // Check if autograd is needed
      //auto grad
-    if (x.auto_grad || y.auto_grad) {
+ 
+    if (x->auto_grad || y->auto_grad) {
+       
         res.auto_grad = true;
-        std::shared_ptr<MultNode> node = std::make_shared<MultNode>(x, y);
-
-        if (x.auto_grad) node->add_next_edge(x.get_or_create_leaf_node(0));
-        if (y.auto_grad) node->add_next_edge(y.get_or_create_leaf_node(1));
-
+       std::shared_ptr<mmNode> node = std::make_shared<mmNode>(x, y, res.sizes());
+        if (x->auto_grad) node->add_next_edge(x->get_or_create_leaf_node(0));
+        if (y->auto_grad) node->add_next_edge(y->get_or_create_leaf_node(1));
+  
+      
         res.grad_fn = node;
+   
     }
+    
     return res;
 
   }
 
 //Transpose a matrice 
-Tensor Transpose(Tensor& x)
+Tensor Transpose(Tensor* x)
 {
-    std::vector < std::size_t > new_sizes = { x.tensorImpl->sizes[1],x.tensorImpl->sizes[0] };
-    std::vector < std::size_t > new_strides = { x.tensorImpl->strides[1], x.tensorImpl->strides[0] };
-    std::shared_ptr<TensorImpl> new_tensor_impl = std::make_shared<TensorImpl>(x.tensorImpl->storage->clone(),new_sizes,new_strides);
+    std::vector < std::size_t > new_sizes = { x->tensorImpl->sizes[1],x->tensorImpl->sizes[0] };
+    std::vector < std::size_t > new_strides = { x->tensorImpl->strides[1], x->tensorImpl->strides[0] };
+    std::shared_ptr<TensorImpl> new_tensor_impl = std::make_shared<TensorImpl>(x->tensorImpl->storage->clone(),new_sizes,new_strides);
     return Tensor(new_tensor_impl);
 }
 
