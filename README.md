@@ -1,3 +1,18 @@
+# AutoGrad Matrix Multiplication Example
+
+## Overview
+
+This example demonstrates a forward pass and backpropagation using a custom `tiny_torch` library with `Tensor` and `AutoGrad` support.
+
+## Formula
+
+```
+n = (ll * (x @ y)) + (l + (x @ y))
+```
+
+## Code
+
+```cpp
 #include <iostream>
 #include "Tensor.h"
 #include "AutoGrad.h"
@@ -33,3 +48,28 @@ int main() {
 
     return 0;
 }
+```
+
+## Tensor Shapes
+
+| Tensor | Shape  | Initialization |
+|--------|--------|----------------|
+| `x`    | 4 × 8  | Filled with `55.0f` |
+| `y`    | 8 × 9  | Random         |
+| `l`    | 4 × 9  | Random         |
+| `ll`   | 4 × 9  | Random         |
+
+## Computation Graph
+
+| Step | Operation              | Result |
+|------|------------------------|--------|
+| 1    | `z = x @ y`            | 4 × 9  |
+| 2    | `t = l + z`            | 4 × 9  |
+| 3    | `k = ll * z`           | 4 × 9  |
+| 4    | `n = k + t`            | 4 × 9  |
+
+## Notes
+
+- Only `x` and `y` have gradient tracking enabled (`auto_grad = true`).
+- `l` and `ll` are treated as constants with no gradient computation.
+- Backpropagation is triggered via `tiny_torch::auto_grad::backward(n.grad_fn)`.
