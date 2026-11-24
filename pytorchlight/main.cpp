@@ -11,7 +11,7 @@
 
 int main() {
     try {
-        // Fix: shape1's columns (8) must equal shape2's rows (8)
+      
         std::vector<size_t> shape1 = { 4, 8 };
         std::vector<size_t> shape2 = { 8, 9 };
         std::vector<size_t> shape3 = { 4, 9 };
@@ -48,7 +48,6 @@ std::cout << "Gradient of y:\n" << y.grad_tensor()->print() << std::endl;
     }
     
     catch (const std::exception& e) {
-        // Catches any dimension mismatch exceptions instead of calling abort()
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
